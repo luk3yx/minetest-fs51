@@ -44,4 +44,4 @@ Minetest or are using node formspecs.
 such as hypertext and background9 so the formspec will still work properly with
 newer clients.*
 
- [formspec_ast]: https://git.minetest.land/luk3yx/formspec_ast
+ [formspec_ast]: https://content.minetest.net/packages/luk3yx/formspec_ast
