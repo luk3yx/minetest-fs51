@@ -117,7 +117,7 @@ end
 local get_meta = minetest.get_meta
 function minetest.get_meta(...)
     local meta = get_meta(...)
-    if type(meta) == 'userdata' then
+    if old_nodemeta_set_string == nil and type(meta) == 'userdata' then
         minetest.get_meta = get_meta
         local cls = getmetatable(meta)
         old_nodemeta_set_string = cls.set_string
