@@ -20,6 +20,18 @@ sent to them to try and make sure they are at least usable.
 1. Install the mod
 2. Hope it works properly and doesn't break anything
 
+## Limitations
+
+FS51 replaces some newer formspec elements with fallbacks if clients don't
+support them, however this does have some limitations:
+
+ - Animated images will just display their first frame.
+ - Fullscreen background colours (the `fbgcolor` value in `bgcolor`) don't
+   work.
+ - Hypertext elements will lose all formatting and interactivity.
+ - Models will just display their underlying texture.
+ - Scroll containers are broken.
+
 ## Troubleshooting
 
  - If your mod stores `minetest.show_formspec` during load time, you'll need to
