@@ -25,6 +25,9 @@ sent to them to try and make sure they are at least usable.
  - If your mod stores `minetest.show_formspec` during load time, you'll need to
    add `fs51` as an optional dependency to `mod.conf` so it can use the patched
    show_formspec code.
+ - If a mod you use has broken node formspecs with fs51 enabled, try adding
+   `fs51.disable_meta_override = true` to minetest.conf (and please open an
+   issue against fs51).
 
 ## Dependencies
 

@@ -100,6 +100,10 @@ minetest.register_on_joinplayer(function(player)
     end
 end)
 
+if minetest.settings:get_bool('fs51.disable_meta_override') then
+    return
+end
+
 -- Patch minetest.get_meta()
 -- Inspired by https://gitlab.com/sztest/nodecore/-/blob/master/mods/nc_api
 local old_nodemeta_set_string
