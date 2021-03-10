@@ -36,7 +36,7 @@ This mod depends on my [formspec_ast] library.
 ## API functions
 
 You probably don't need to use these unless you're embedding fs51 outside of
-Minetest or are using node formspecs.
+Minetest.
 
  - `fs51.backport(tree)`: Applies backports to a [formspec_ast] tree and
     returns the modified tree. This does not modify the existing tree in place.
