@@ -1,4 +1,4 @@
-# fs51
+# FS51
 
 A compatibility layer that makes formspec_version 3 (and later) formspecs
 render more correctly in Minetest 5.1.0 and earlier.

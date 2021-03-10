@@ -4,8 +4,8 @@
 -- Copyright © 2021 by luk3yx.
 --
 
-local get_player_information = minetest.get_player_information
-local type = type
+local fixers = ...
+local get_player_information, type = minetest.get_player_information, type
 local function backport_for(name, formspec)
     local info = get_player_information(name)
     local formspec_version = info and info.formspec_version or 1
@@ -58,6 +58,9 @@ local function backport_for(name, formspec)
             end
         elseif formspec_version == 1 and node_type == 'tabheader' then
             node.w, node.h = nil, nil
+        elseif formspec_version == 2 and node_type == 'bgcolor' then
+            modified = true
+            fixers.bgcolor(node)
         end
     end
 

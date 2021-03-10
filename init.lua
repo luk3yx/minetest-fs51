@@ -134,6 +134,16 @@ function fixers.dropdown(elem)
     elem.index_event = nil
 end
 
+-- Use a hack to make "neither" work properly. Not much can be done about
+-- "both" unfortunately.
+function fixers.bgcolor(elem)
+    if elem.fullscreen == 'neither' then
+        elem.bgcolor = '#0000'
+        elem.fullscreen = false
+    end
+    elem.fbgcolor = nil
+end
+
 --
 local pre_types = {size = true, position = true, anchor = true,
                    no_prepend = true}
@@ -206,5 +216,6 @@ end
 -- Monkey patch Minetest's code
 if rawget(_G, 'minetest') and minetest.register_on_player_receive_fields and
         not minetest.settings:get_bool('fs51.disable_monkey_patching') then
-    dofile(minetest.get_modpath('fs51') .. '/monkey_patching.lua')
+    local fn = minetest.get_modpath('fs51') .. '/monkey_patching.lua'
+    assert(loadfile(fn))(fixers)
 end
