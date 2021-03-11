@@ -131,7 +131,9 @@ function fixers.dropdown(elem)
     fix_pos(elem)
     elem.w = elem.w / spacing_y
     elem.h = nil
-    elem.index_event = nil
+
+    -- Make index_event nil if it's set to false
+    elem.index_event = elem.index_event or nil
 end
 
 -- Use a hack to make "neither" work properly. Not much can be done about
