@@ -6,6 +6,33 @@
 
 local fixers = ...
 local get_player_information, type = minetest.get_player_information, type
+local function remove_hypertext(text)
+    -- If the text doesn't contain backslashes use gsub for performance
+    if not text:find('\\', 1, true) then
+        return text:gsub('<[^>]+>', '')
+    end
+
+    -- Otherwise iterate over it
+    local res = ''
+    local escaping, ignoring
+    for i = 1, #text do
+        local char = text:sub(i, i)
+        if ignoring then
+            ignoring = char ~= '>'
+        elseif escaping then
+            res = res .. char
+            escaping = false
+        elseif char == '<' then
+            ignoring = true
+        elseif char == '\\' then
+            escaping = true
+        else
+            res = res .. char
+        end
+    end
+    return res
+end
+
 local function backport_for(name, formspec)
     local info = get_player_information(name)
     local formspec_version = info and info.formspec_version or 1
@@ -43,7 +70,7 @@ local function backport_for(name, formspec)
             node.type = 'textarea'
             node.name = ''
             node.label = ''
-            node.default = node.text:gsub('<[^>]+>', '')
+            node.default = remove_hypertext(node.text)
             node.text = nil
         elseif node_type == 'scroll_container' then
             modified = true
