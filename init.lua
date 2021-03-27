@@ -188,6 +188,9 @@ function fs51.backport(tree)
                     i = i + 1
                     table.insert(tree, i, elem[j])
                 end
+                if elem[2] and elem[2].type == "listring" then
+                    i = i + 1
+                end
             end
         elseif real_coordinates then
             (fixers[elem.type] or default_fixer)(elem)
