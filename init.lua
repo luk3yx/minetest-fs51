@@ -86,7 +86,9 @@ function fixers.size(elem)
     elem.h = elem.h / spacing_y - padding * 2
 end
 
-function fixers.list(elem, next_elem)
+-- Lists are a special case because they return a container which needs to be
+-- processed and flattened.
+local function fix_list(elem)
     fix_pos(elem)
     if elem.h < 2 then return end
 
@@ -104,26 +106,7 @@ function fixers.list(elem, next_elem)
             h = 1,
             starting_item_index = start + (elem.w * r),
         }
-
-        -- Swap the second element and any listring[]
-        if row == 2 and next_elem and next_elem.type == 'listring' and
-                not next_elem.inventory_location then
-            for k, v in pairs(elem[2]) do
-                next_elem[k] = v
-            end
-            next_elem.x = elem.x
-            next_elem.y = elem.y + next_elem.y
-            elem[2] = {type = 'listring'}
-        end
     end
-
-    -- Convert the base element to a container
-    for k, _ in pairs(elem) do
-        if type(k) ~= 'number' and k ~= 'x' and k ~= 'y' then
-            elem[k] = nil
-        end
-    end
-    elem.type = 'container'
 end
 
 -- Remove the "height" attribute on dropdowns.
@@ -170,6 +153,7 @@ function fs51.backport(tree)
     end
 
     -- Allow deletion of real_coordinates[]
+    local list1, list2
     local i = 1
     while tree[i] ~= nil do
         local elem = tree[i]
@@ -177,21 +161,33 @@ function fs51.backport(tree)
             real_coordinates = elem.bool
             table.remove(tree, i)
             i = i - 1
-        elseif elem.type == 'list' and real_coordinates then
-            fixers.list(elem, tree[i + 1])
+        elseif elem.type == 'list' then
+            -- There's no need to store every singe list
+            list1, list2 = list2, elem
 
-            -- Flatten containers
-            if elem.type == 'container' and elem[1] then
+            if real_coordinates then
+                fix_list(elem)
                 formspec_ast.apply_offset(elem, elem.x, elem.y)
+
+                -- Remove the container from the tree and append its contents.
                 tree[i] = elem[1]
                 for j = 2, #elem do
                     i = i + 1
                     table.insert(tree, i, elem[j])
                 end
-                if elem[2] and elem[2].type == "listring" then
-                    i = i + 1
-                end
             end
+        elseif elem.type == 'listring' and not elem.inventory_location and
+                list1 then
+            -- This is required because lists are split into multiple elements
+            elem.inventory_location = list1.inventory_location
+            elem.list_name = list1.list_name
+
+            i = i + 1
+            table.insert(tree, i, {
+                type = 'listring',
+                inventory_location = list2.inventory_location,
+                list_name = list2.list_name,
+            })
         elseif real_coordinates then
             (fixers[elem.type] or default_fixer)(elem)
             for _, n in ipairs(xywh) do
