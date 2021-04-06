@@ -90,7 +90,6 @@ end
 -- processed and flattened.
 local function fix_list(elem)
     fix_pos(elem)
-    if elem.h < 2 then return end
 
     -- Split the list[] into multiple list[]s.
     local start = math.max(elem.starting_item_index or 0, 0)
@@ -162,7 +161,7 @@ function fs51.backport(tree)
             table.remove(tree, i)
             i = i - 1
         elseif elem.type == 'list' then
-            -- There's no need to store every singe list
+            -- There's no need to store every single list
             list1, list2 = list2, elem
 
             if real_coordinates then
