@@ -187,6 +187,29 @@ function fs51.backport(tree)
                 inventory_location = list2.inventory_location,
                 list_name = list2.list_name,
             })
+        elseif elem.type == 'label' and real_coordinates then
+            -- This workaround is probably too specific and targets
+            -- unified_inventory.
+            default_fixer(elem)
+            elem.x = math.floor(elem.x * 1000) / 1000
+            elem.y = math.floor(elem.y * 1000) / 1000
+
+            -- Move labels before buttons if they don't clip
+            local j = i
+            while j > 1 do
+                j = j - 1
+                local elem2 = tree[j]
+                if elem2.type:sub(-6) == 'button' then
+                    if elem2.x + elem2.w > elem.x and
+                            elem2.y + elem2.h > elem.y + 0.225 then
+                        break
+                    end
+                elseif elem2.type ~= 'tooltip' then
+                    break
+                end
+            end
+            table.remove(tree, i)
+            table.insert(tree, j + 1, elem)
         elseif real_coordinates then
             (fixers[elem.type] or default_fixer)(elem)
             for _, n in ipairs(xywh) do
