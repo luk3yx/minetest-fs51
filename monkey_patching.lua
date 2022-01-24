@@ -41,11 +41,16 @@ local dropdown_hack_enabled = {}
 minetest.after(0, minetest.register_on_player_receive_fields,
         function(player, _, fields)
     if dropdown_hack_enabled[player:get_player_name()] then
-        for k, v in pairs(fields) do
-            local i = v:match("^\27%(fs51@idx_([0-9]+)%)")
-            if i then
-                fields[k] = i
+        local to_update = {}
+        for field, raw_value in pairs(fields) do
+            if field:sub(1, 6) == "\1fs51\1" then
+                to_update[field] = raw_value:match("^\27%(fs51@idx_([0-9]+)%)")
             end
+        end
+
+        for field, value in pairs(to_update) do
+            fields[field] = nil
+            fields[field:sub(7)] = value
         end
     end
 end)
@@ -75,6 +80,7 @@ local function backport_for(name, formspec)
             dropdown_hack_enabled[name] = true
 
             modified = true
+            node.name = "\1fs51\1" .. node.name
             for i, item in ipairs(node.item) do
                 node.item[i] = "\27(fs51@idx_" .. i .. ")" .. item
             end
