@@ -39,7 +39,7 @@ end
 -- done to prevent trying to parse every single field for every single player.
 local dropdown_hack_enabled = {}
 minetest.after(0, table.insert, minetest.registered_on_player_receive_fields,
-        1, function(player, formname, fields)
+        1, function(player, _, fields)
     if dropdown_hack_enabled[player:get_player_name()] then
         for k, v in pairs(fields) do
             local i = v:match("^\27%(fs51@idx_([0-9]+)%)")
@@ -79,7 +79,7 @@ local function backport_for(name, formspec)
                 node.item[i] = "\27(fs51@idx_" .. i .. ")" .. item
             end
             node.index_event = nil
-        elseif formspec_version == 3 then
+        elseif formspec_version == 3 then  -- luacheck: ignore 542
             -- Don't do anything else
         elseif formspec_version == 1 and node_type == 'background9' then
             -- No need to set modified here
