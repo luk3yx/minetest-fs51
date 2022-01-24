@@ -38,8 +38,8 @@ end
 -- shown any formspec with a dropdown that has index_event. The extra check is
 -- done to prevent trying to parse every single field for every single player.
 local dropdown_hack_enabled = {}
-minetest.after(0, table.insert, minetest.registered_on_player_receive_fields,
-        1, function(player, _, fields)
+minetest.after(0, minetest.register_on_player_receive_fields,
+        function(player, _, fields)
     if dropdown_hack_enabled[player:get_player_name()] then
         for k, v in pairs(fields) do
             local i = v:match("^\27%(fs51@idx_([0-9]+)%)")
