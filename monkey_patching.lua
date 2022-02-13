@@ -75,14 +75,14 @@ local function backport_for(name, formspec)
     local modified
     for node in formspec_ast.walk(tree) do
         local node_type = node.type
-        if node_type == "dropdown" and node.index_event and node.item then
+        if node_type == "dropdown" and node.index_event and node.items then
             -- Enable the dropdown hack for this player
             dropdown_hack_enabled[name] = true
 
             modified = true
             node.name = "\1fs51\1" .. node.name
-            for i, item in ipairs(node.item) do
-                node.item[i] = "\27(fs51@idx_" .. i .. ")" .. item
+            for i, item in ipairs(node.items) do
+                node.items[i] = "\27(fs51@idx_" .. i .. ")" .. item
             end
             node.index_event = nil
         elseif formspec_version == 3 then  -- luacheck: ignore 542
