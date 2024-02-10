@@ -165,7 +165,7 @@ minetest.register_on_joinplayer(function(player)
     end
 end)
 
-if minetest.settings:get_bool('fs51.disable_meta_override') then
+if minetest.settings:get_bool('fs51.disable_meta_override', true) then
     return
 end
 

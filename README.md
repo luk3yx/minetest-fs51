@@ -37,9 +37,11 @@ support them, however this does have some limitations:
  - If your mod stores `minetest.show_formspec` during load time, you'll need to
    add `fs51` as an optional dependency to `mod.conf` so it can use the patched
    show_formspec code.
- - If a mod you use has broken node formspecs with fs51 enabled, try adding
-   `fs51.disable_meta_override = true` to minetest.conf (and please open an
-   issue against fs51).
+ - If you need to have node meta formspecs work in older clients, try adding
+   `fs51.disable_meta_override = false` to minetest.conf. Note that this does
+   not correctly parse `${key}` syntax (see https://gitlab.com/luk3yx/minetest-fs51/-/issues/1),
+   I recommend using `minetest.show_formspec` instead if possible as fs51 is
+   also able to perform backports based on the client's version.
 
 ## Dependencies
 

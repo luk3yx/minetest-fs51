@@ -2,4 +2,4 @@
 fs51.disable_monkey_patching (Prevent fs51 auto-translation) bool false
 
 # Disables node meta formspec translation.
-fs51.disable_meta_override (Prevent node meta override) bool false
+fs51.disable_meta_override (Prevent node meta override) bool true
