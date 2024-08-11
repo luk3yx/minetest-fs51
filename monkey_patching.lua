@@ -37,32 +37,54 @@ end
 -- with \x1b(fs51@idx_<N>). This is then parsed out here if the player has been
 -- shown any formspec with a dropdown that has index_event. The extra check is
 -- done to prevent trying to parse every single field for every single player.
-local dropdown_hack_enabled = {}
+local fields_transform_enabled = {}
 minetest.after(0, minetest.register_on_player_receive_fields,
         function(player, _, fields)
-    if dropdown_hack_enabled[player:get_player_name()] then
-        local to_update = {}
-        for field, raw_value in pairs(fields) do
-            if field:sub(1, 6) == "\1fs51\1" then
-                to_update[field] = raw_value:match("^\27%(fs51@idx_([0-9]+)%)")
+    local name = player:get_player_name()
+    if not fields_transform_enabled[name] then return end
+
+    local to_update = {}
+    for field, raw_value in pairs(fields) do
+        if field:sub(1, 6) == "\1fs51\1" then
+            local new_value = raw_value:match("^\27%(fs51@idx_([0-9]+)%)")
+            if new_value then
+                to_update[field] = new_value
+            else
+                -- Show a fallback open URL dialog
+                local url, v = raw_value:match("^\27%(fs51@url_([^%)]+)%)(.+)")
+                if url then
+                    to_update[field] = v
+                    fields.quit = "true"
+
+                    minetest.show_formspec(name, "fs51:url",
+                        "formspec_version[4]" ..
+                        "size[10.5,3.3]" ..
+                        "label[0.3,0.5;Open URL]" ..
+                        "field[0.3,1.2;9.9,0.8;u;Paste the below URL into " ..
+                            "your web browser;" ..
+                            minetest.formspec_escape(url) .. "]" ..
+                        "button_exit[0.3,2.2;9.9,0.8;done;Done]")
+                end
             end
         end
+    end
 
-        for field, value in pairs(to_update) do
-            fields[field] = nil
-            fields[field:sub(7)] = value
-        end
+    for field, value in pairs(to_update) do
+        fields[field] = nil
+        fields[field:sub(7)] = value
     end
 end)
 
 minetest.register_on_leaveplayer(function(player)
-    dropdown_hack_enabled[player:get_player_name()] = nil
+    fields_transform_enabled[player:get_player_name()] = nil
 end)
 
 local function backport_for(name, formspec)
     local info = get_player_information(name)
     local formspec_version = info and info.formspec_version or 1
-    if formspec_version >= 4 then return formspec end
+    local protocol_version = info and info.protocol_version or 0
+    -- The protocol version is needed to detect MT 5.9.0
+    if formspec_version >= 8 or protocol_version >= 44 then return formspec end
 
     local tree, err = formspec_ast.parse(formspec)
     if not tree then
@@ -75,9 +97,20 @@ local function backport_for(name, formspec)
     local modified
     for node in formspec_ast.walk(tree) do
         local node_type = node.type
-        if node_type == "dropdown" and node.index_event and node.items then
-            -- Enable the dropdown hack for this player
-            dropdown_hack_enabled[name] = true
+        if (node_type == "button_url" or node_type == "button_url_exit") and
+                formspec_version < 8 and protocol_version < 44 then
+            -- Replace URL buttons with a fallback
+            fields_transform_enabled[name] = true
+
+            modified = true
+            node.type = "button"
+            node.name = "\1fs51\1" .. node.name
+            node.label = "\27(fs51@url_" .. node.url:gsub("%)", "%%29") ..
+                ")" .. node.label
+        elseif node_type == "dropdown" and formspec_version < 4 and
+                node.index_event and node.items then
+            -- Enable the field value transforming hack for this player
+            fields_transform_enabled[name] = true
 
             modified = true
             node.name = "\1fs51\1" .. node.name
@@ -85,7 +118,7 @@ local function backport_for(name, formspec)
                 node.items[i] = "\27(fs51@idx_" .. i .. ")" .. item
             end
             node.index_event = nil
-        elseif formspec_version == 3 then  -- luacheck: ignore 542
+        elseif formspec_version >= 3 then  -- luacheck: ignore 542
             -- Don't do anything else
         elseif formspec_version == 1 and node_type == 'background9' then
             -- No need to set modified here

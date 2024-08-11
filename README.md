@@ -31,6 +31,7 @@ support them, however this does have some limitations:
  - Hypertext elements will lose all formatting and interactivity.
  - Models will just display their underlying texture.
  - Scroll containers are broken.
+ - `button_url[]` behaves equivalently to `button_url_exit[]`.
 
 ## Troubleshooting
 
