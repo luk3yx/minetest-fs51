@@ -4,6 +4,8 @@
 -- Copyright © 2021 by luk3yx.
 --
 
+fs51.monkey_patching_enabled = true
+
 local fixers = ...
 local get_player_information, type = minetest.get_player_information, type
 local function remove_hypertext(text)
@@ -33,6 +35,8 @@ local function remove_hypertext(text)
     return res
 end
 
+local FIELD_PREFIX = "_*fs51*"
+
 -- Backport index_event by modifying the dropdown items so that they all start
 -- with \x1b(fs51@idx_<N>). This is then parsed out here if the player has been
 -- shown any formspec with a dropdown that has index_event. The extra check is
@@ -45,13 +49,14 @@ minetest.after(0, minetest.register_on_player_receive_fields,
 
     local to_update = {}
     for field, raw_value in pairs(fields) do
-        if field:sub(1, 6) == "\1fs51\1" then
-            local new_value = raw_value:match("^\27%(fs51@idx_([0-9]+)%)")
+        if field:sub(1, #FIELD_PREFIX) == FIELD_PREFIX then
+            -- The leading escape character may be stripped by the engine
+            local new_value = raw_value:match("^\27*%(fs51@idx_([0-9]+)%)")
             if new_value then
                 to_update[field] = new_value
             else
                 -- Show a fallback open URL dialog
-                local url, v = raw_value:match("^\27%(fs51@url_([^%)]+)%)(.+)")
+                local url, v = raw_value:match("^\27*%(fs51@url_([^%)]+)%)(.+)")
                 if url then
                     to_update[field] = v
                     fields.quit = "true"
@@ -71,7 +76,7 @@ minetest.after(0, minetest.register_on_player_receive_fields,
 
     for field, value in pairs(to_update) do
         fields[field] = nil
-        fields[field:sub(7)] = value
+        fields[field:sub(#FIELD_PREFIX + 1)] = value
     end
 end)
 
@@ -104,7 +109,9 @@ local function backport_for(name, formspec)
 
             modified = true
             node.type = "button"
-            node.name = "\1fs51\1" .. node.name
+            node.name = FIELD_PREFIX .. node.name
+            -- Deprecated in later MT versions, but that shouldn't matter as
+            -- this only gets sent to old clients
             node.label = "\27(fs51@url_" .. node.url:gsub("%)", "%%29") ..
                 ")" .. node.label
         elseif node_type == "dropdown" and formspec_version < 4 and
@@ -113,7 +120,7 @@ local function backport_for(name, formspec)
             fields_transform_enabled[name] = true
 
             modified = true
-            node.name = "\1fs51\1" .. node.name
+            node.name = "_*fs51*" .. node.name
             for i, item in ipairs(node.items) do
                 node.items[i] = "\27(fs51@idx_" .. i .. ")" .. item
             end
