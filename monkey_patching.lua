@@ -42,9 +42,15 @@ local FIELD_PREFIX = "_*fs51*"
 -- shown any formspec with a dropdown that has index_event. The extra check is
 -- done to prevent trying to parse every single field for every single player.
 local fields_transform_enabled = {}
+local inv_open_legacy = {}
 minetest.after(0, minetest.register_on_player_receive_fields,
-        function(player, _, fields)
+        function(player, formname, fields)
     local name = player:get_player_name()
+
+    if formname == "" and fields.quit then
+        inv_open_legacy[name] = nil
+    end
+
     if not fields_transform_enabled[name] then return end
 
     local to_update = {}
@@ -81,11 +87,13 @@ minetest.after(0, minetest.register_on_player_receive_fields,
 end)
 
 minetest.register_on_leaveplayer(function(player)
-    fields_transform_enabled[player:get_player_name()] = nil
+    local name = player:get_player_name()
+    fields_transform_enabled[name] = nil
+    inv_open_legacy[name] = nil
 end)
 
-local function backport_for(name, formspec)
-    local info = get_player_information(name)
+local function backport_for(name, formspec, info)
+    info = info or get_player_information(name)
     local formspec_version = info and info.formspec_version or 1
     local protocol_version = info and info.protocol_version or 0
     -- The protocol version is needed to detect MT 5.9.0
@@ -182,15 +190,37 @@ end
 
 -- Patch minetest.show_formspec()
 local show_formspec = minetest.show_formspec
+local old_set_inventory_formspec
 function minetest.show_formspec(pname, formname, formspec)
-    return show_formspec(pname, formname, backport_for(pname, formspec))
+    local info = get_player_information(pname)
+    formspec = backport_for(pname, formspec, info)
+    if formname == "" and formspec ~= "" and
+            (info.protocol_version or 0) < 49 then
+        -- Backport for 5.13's inventory formspec showing
+        local player = minetest.get_player_by_name(pname)
+        if player then
+            old_set_inventory_formspec(player, formspec)
+
+            -- Make subsequent set_inventory_formspec calls call show_formspec
+            inv_open_legacy[pname] = true
+        end
+    else
+        inv_open_legacy[pname] = nil
+    end
+    return show_formspec(pname, formname, formspec)
 end
 
 -- Patch player:set_inventory_formspec()
-local old_set_inventory_formspec
 local function new_set_inventory_formspec(self, formspec, ...)
-    return old_set_inventory_formspec(self,
-        backport_for(self:get_player_name(), formspec), ...)
+    local pname = self:get_player_name()
+    formspec = backport_for(pname, formspec)
+
+    -- Call show_formspec for old clients that don't do it themselves
+    if inv_open_legacy[pname] then
+        show_formspec(pname, "", formspec)
+    end
+
+    return old_set_inventory_formspec(self, formspec, ...)
 end
 
 minetest.register_on_joinplayer(function(player)

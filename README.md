@@ -12,8 +12,9 @@ to disable automatic formspec translation, add
 Minetest 5.1.0 introduced changes to formspecs that made them much less painful
 to create and work with. However, formspecs are interpreted client-side and to
 take advantage of these changes you would normally need to force everyone to
-upgrade Minetest. This mod detects these older clients and modifies formspecs
-sent to them to try and make sure they are at least usable.
+upgrade Luanti (formerly known as Minetest). This mod detects these older
+clients and modifies formspecs sent to them to try and make sure they are at
+least usable.
 
 ## How to use
 
@@ -51,7 +52,7 @@ This mod depends on my [formspec_ast] library.
 ## API functions
 
 You probably don't need to use these unless you're embedding fs51 outside of
-Minetest.
+Luanti (formerly known as Minetest).
 
  - `fs51.backport(tree)`: Applies backports to a [formspec_ast] tree and
     returns the modified tree. This does not modify the existing tree in place.
