@@ -190,27 +190,22 @@ end
 
 -- Patch minetest.show_formspec()
 local show_formspec = minetest.show_formspec
-local old_set_inventory_formspec
 function minetest.show_formspec(pname, formname, formspec)
     local info = get_player_information(pname)
     formspec = backport_for(pname, formspec, info)
     if formname == "" and formspec ~= "" and
             (info.protocol_version or 0) < 49 then
         -- Backport for 5.13's inventory formspec showing
-        local player = minetest.get_player_by_name(pname)
-        if player then
-            old_set_inventory_formspec(player, formspec)
-
-            -- Make subsequent set_inventory_formspec calls call show_formspec
-            inv_open_legacy[pname] = true
-        end
+        inv_open_legacy[pname] = true
     else
         inv_open_legacy[pname] = nil
     end
     return show_formspec(pname, formname, formspec)
 end
 
--- Patch player:set_inventory_formspec()
+-- Patch player:set_inventory_formspec() to make subsequent
+-- set_inventory_formspec calls call show_formspec
+local old_set_inventory_formspec
 local function new_set_inventory_formspec(self, formspec, ...)
     local pname = self:get_player_name()
     formspec = backport_for(pname, formspec)
